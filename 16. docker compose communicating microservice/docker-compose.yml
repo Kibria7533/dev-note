@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  microservice1:
+    container_name: microservice1
+    build: microservice1
+    networks:
+      - multiple_microservices
+
+  microservice2:
+    container_name: microservice2
+    build: microservice2
+    networks:
+      - multiple_microservices
+
+  loadbalancer:
+    container_name: loadbalancer
+    build: loadbalancer
+    networks:
+      - multiple_microservices
+    ports:
+      - 3000:80
+
+  redis:
+    container_name: redis
+    image: "redis:alpine"
+    networks:
+      - multiple_microservices
+      
+networks:
+  multiple_microservices:
+    name: multiple_microservices
