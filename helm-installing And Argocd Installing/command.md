@@ -1,4 +1,4 @@
-#Install helm
+### Install helm
 ```
 curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
 sudo apt-get install apt-transport-https --yes
@@ -8,13 +8,19 @@ sudo apt-get install helm
 ```
 
 
-# Install Argocd Using Helm Chart API
+### Install Argocd (Node you have to make its type NodePort form kubernetes dashbord service)
 ```
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
+### Get argocd secret and you know default username is admin
+`kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
 
-# Deploying the Dashboard UI
-```
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
-```
+
+
+
+
+
+
+
+

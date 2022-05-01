@@ -25,6 +25,14 @@ cd ../worker-node-02
 vagrant up
 ```
 
+### If error
+```
+There was an error while executing `VBoxManage`, a CLI used by Vagrant
+for controlling VirtualBox. The command and stderr is shown below
+```
+### vargrant ssh error or password not working error
+`Please update vagrant and oracal vm and use ip range 192.168.56.4 Or 192.168.56.4`
+
 ### SSH into the vagrant boxes using 
 `vagrant ssh`
 
@@ -107,7 +115,9 @@ sudo apt-get install -y kubelet kubeadm kubectl
 ```
 `sudo apt-mark hold kubelet kubeadm kubectl`
 
-
+```
+sudo apt install net-tools
+```
 ## Do these in master node
 <!-- IPADDR="10.10.10.100" -->
 ### See the ip address of eth0 using
@@ -121,7 +131,16 @@ NODENAME=$(hostname -s)
 NODENAME=master-node-01
 IPADDR=10.10.12.94
 
+```
+IPADDR="192.168.56.4"
+NODENAME=$(hostname -s)
 
+```
+
+```
+IPADDR="192.168.56.5"
+NODENAME=$(hostname -s)
+```
 
 <!-- ### (optional) In ec2 we may need to add the NODENAME in the hosts file
 `sudo nano /etc/hosts` -->
@@ -154,6 +173,12 @@ systemctl stop kubelet
 
 ### Copy the contents of `/etc/kubernetes/admin.conf` from the master machine to the worker machine
 `sudo cat /etc/kubernetes/admin.conf`
+
+# And copy that content to worker machine
+`sudo nano /etc/kubernetes/admin.conf`
+
+and paste
+
 
 ### (optional) check the hash of the admin.conf in both master and worker node to make sure that they are identical
 `sudo sha256sum /etc/kubernetes/admin.conf`
@@ -237,6 +262,30 @@ spec:
 
 ### We can see that the pods are running in our worker nodes using
 `kubectl describe pods`
+
+### Now access the kubernetes dashboard(first create the dashboard using this command)
+`kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.0/aio/deploy/recommended.yaml
+`
+### You can check with below commands:
+`kubectl get all -n kubernetes-dashboard`
+
+### Now Create a Role 
+`kubectl create -f  https://raw.githubusercontent.com/minhaz1217/devops-notes/master/22.%20kubernates%20dashboard/service-user.yaml
+`
+###Binding to access the dashboard
+`
+kubectl create -f https://raw.githubusercontent.com/minhaz1217/devops-notes/master/22.%20kubernates%20dashboard/cluster-role-binding.yaml`
+
+### Make the dashboard service as NodePort
+`kubectl --namespace kubernetes-dashboard patch svc kubernetes-dashboard -p '{"spec": {"type": "NodePort"}}'
+`
+
+## And now check your svc
+`kubectl get svc -n kubernetes-dashboard`
+
+### Go to firefox browser not chrome
+## Now generate and save the token for further uses
+`kubectl -n kubernetes-dashboard get secret $(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"`
 
 ### Now create a nodeport service to expose our pods using
 `nano nodeport.yaml`
