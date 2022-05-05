@@ -55,13 +55,13 @@ From worker nodes
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 ```
+### If you incresase or decrese ram or cpu after one vagrant file change then run `vagrant reload` and again run the above command
 
 ### Enable iptables bridged traffic
 ```
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 br_netfilter
 EOF
-
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
@@ -77,7 +77,7 @@ sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-relea
 ```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 echo \
-  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt-get update -y
 sudo apt-get install docker-ce docker-ce-cli containerd.io -y
@@ -109,10 +109,26 @@ sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://pack
 ```
 `echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list`
 
+### if unable to AWS error - sudo: unable to resolve host ip-10-0-xx-xx then edit /etc/hosts
+
+```
+127.0.0.1 localhost
+127.0.0.1 ip-xxx-xx-x-xx
+```
+
 ```
 sudo apt-get update -y
 sudo apt-get install -y kubelet kubeadm kubectl
 ```
+
+### IF error Unable to locate package kubectl when installing the kubectl kubeadm for kubernetes installation then again do this
+`
+sudo apt-get update -y
+sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+`
+
+
 `sudo apt-mark hold kubelet kubeadm kubectl`
 
 ```
@@ -128,6 +144,7 @@ set the ipv4 address as the `IPADDR`
 IPADDR="<master_node's_eth0's_ip>"
 NODENAME=$(hostname -s)
 ```
+### For vagrant only
 NODENAME=master-node-01
 IPADDR=10.10.12.94
 

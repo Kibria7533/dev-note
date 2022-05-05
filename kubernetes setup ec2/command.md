@@ -1,3 +1,10 @@
+### While ssh if failt to add to known hosts 
+`sudo chmod 700 ~/.ssh/
+sudo chmod 600 ~/.ssh/*
+sudo chown -R ${USER} ~/.ssh/
+sudo chgrp -R ${USER} ~/.ssh/`
+
+
 ### I had the probelem that my kubernetes dashboard was on ec2 local some port so how could i access it
 
 Then i enable icmp inbound and outbound traffic but didnt workd then finaly notish that i didnt run command for creating dashboard
