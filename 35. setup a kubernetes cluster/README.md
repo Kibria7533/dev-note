@@ -149,7 +149,7 @@ NODENAME=master-node-01
 IPADDR=10.10.12.94
 
 ```
-IPADDR="192.168.56.4"
+IPADDR="192.168.56.5"
 NODENAME=$(hostname -s)
 
 ```
@@ -165,6 +165,11 @@ NODENAME=$(hostname -s)
 `sudo kubeadm init --apiserver-advertise-address=$IPADDR  --apiserver-cert-extra-sans=$IPADDR  --pod-network-cidr=192.168.0.0/16 --node-name $NODENAME --ignore-preflight-errors Swap --v=5`
 <!-- `curl -fsL https://raw.githubusercontent.com/minhaz1217/linux-configurations/master/bash/03.%20installing%20docker/install_docker.sh | bash -` -->
 
+### If error (Unimplemented desc = unknown service runtime.v1alpha2.RuntimeService)
+`sudo rm /etc/containerd/config.toml
+ sudo systemctl restart containerd
+`
+
 ### To use kubectl do this as normal user
 ```
 mkdir -p $HOME/.kube
@@ -179,9 +184,9 @@ or if this error occurs when trying any kubectl command `The connection to the s
 
 ## If anything bad happens during kubeadm init or join we can reset by using
 ```
-rm /etc/kubernetes/kubelet.conf
-rm -rf /etc/kubernetes/pki
-systemctl stop kubelet
+sudo rm /etc/kubernetes/kubelet.conf
+sudo rm -rf /etc/kubernetes/pki
+sudo systemctl stop kubelet
 ```
 `sudo kubeadm reset`
 
@@ -244,6 +249,10 @@ If default configuration is changed we may need to follow calico plugin's instal
 ### We can get kube system pods using
 `kubectl get pods -n kube-system`
 
+
+### For taint checks
+`sudo apt install jq`
+`kubectl get nodes -o json | jq '.items[].spec.taints'`
 # Testing
 ### Paste these
 `nano rc.yaml`
