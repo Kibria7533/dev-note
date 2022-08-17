@@ -311,7 +311,7 @@ kubectl create -f https://raw.githubusercontent.com/minhaz1217/devops-notes/mast
 
 ### Go to firefox browser not chrome
 ## Now generate and save the token for further uses
-`kubectl -n kubernetes-dashboard get secret $(kubectl -n kubernetes-dashboard get sa/admin-user -o jsonpath="{.secrets[0].name}") -o go-template="{{.data.token | base64decode}}"`
+`kubectl -n kubernetes-dashboard create token admin-user`
 
 ### Now create a nodeport service to expose our pods using
 `nano nodeport.yaml`
