@@ -316,13 +316,13 @@ kubectl create -f https://raw.githubusercontent.com/minhaz1217/devops-notes/mast
 
 ### If its updated version you need to create a secret again(if you are not getting token annny how)
 
-`apiVersion: v1
+```apiVersion: v1
 kind: Secret
 type: kubernetes.io/service-account-token
 metadata:
   name: kubernetes-dashboard-admin-secret
   annotations:
-    kubernetes.io/service-account.name: "kubernetes-dashboard-admin-sa"`
+    kubernetes.io/service-account.name: "kubernetes-dashboard-admin-sa"```
 
 ### Now create a nodeport service to expose our pods using
 `nano nodeport.yaml`
