@@ -18,7 +18,18 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 
 
 
+### In Production there may be ingress issue 
+https://github.com/argoproj/argo-cd/issues/2953
 
+
+use this lines
+spec:
+  containers:
+  - command:
+    - argocd-server
+    - --staticassets
+    - /shared/app
+    - --insecure
 
 
 
