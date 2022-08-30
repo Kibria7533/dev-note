@@ -1,2 +1,3 @@
 *end a gitlab-runner verify name_of_runner dile on hbe
 *cd gitlab-runner a gele config file pabo
+ssudo gitlab-runner run korle pending job run hbe
