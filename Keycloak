@@ -15,3 +15,96 @@ for custom themes
 https://github.com/codecentric/helm-charts/tree/master/charts/keycloakx#providing-a-custom-theme
 
 1-amr theme niye /mytheme directory kore akta image banabo then upore linker moto kore akta image ase final values.yaml ar git a dekho
+======================================================================================copy below values.yaml======================================
+
+# This is an example configuration, for production grade configuration see the Keycloak documentation.
+# See https://www.keycloak.org/server/configuration
+# See https://www.keycloak.org/server/all-config
+image:
+  # The Keycloak image repository
+  repository: quay.io/keycloak/keycloak
+  # Overrides the Keycloak image tag whose default is the chart appVersion
+  tag: "19.0.1"
+  # The Keycloak image pull policy
+  pullPolicy: IfNotPresent
+
+# Image pull secrets for the Pod
+imagePullSecrets: []
+# - name: myRegistrKeySecretName
+
+# Add additional volumes, e. g. for custom themes
+extraVolumes: ""
+
+# Add additional volumes mounts, e. g. for custom themes
+extraVolumeMounts: ""
+extraInitContainers: |
+  - name: theme-provider
+    image: 01720588884/mytheme:1.0.0
+    imagePullPolicy: IfNotPresent
+    command:
+      - sh
+    args:
+      - -c
+      - |
+        echo "Copying theme..."
+        cp -R /mytheme/* /theme
+    volumeMounts:
+      - name: theme
+        mountPath: /theme
+
+extraVolumeMounts: |
+  - name: theme
+    mountPath: /opt/keycloak/themes/mytheme
+
+extraVolumes: |
+  - name: theme
+    emptyDir: {}
+command:
+  - "/opt/keycloak/bin/kc.sh"
+  - "--verbose"
+  - "start"
+  - "--auto-build"
+  - "--http-enabled=true"
+  - "--http-port=8080"
+  - "--hostname-strict=false"
+  - "--hostname-strict-https=false"
+  - "--spi-events-listener-jboss-logging-success-level=info"
+  - "--spi-events-listener-jboss-logging-error-level=warn"
+
+extraEnv: |
+  - name: KEYCLOAK_ADMIN
+    valueFrom:
+      secretKeyRef:
+        name: {{ include "keycloak.fullname" . }}-admin-creds
+        key: user
+  - name: KEYCLOAK_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: {{ include "keycloak.fullname" . }}-admin-creds
+        key: password
+  - name: JAVA_OPTS_APPEND
+    value: >-
+      -XX:+UseContainerSupport
+      -XX:MaxRAMPercentage=50.0
+      -Djava.awt.headless=true
+      -Djgroups.dns.query={{ include "keycloak.fullname" . }}-headless
+
+dbchecker:
+  enabled: true
+
+database:
+  vendor: postgres
+  hostname: keycloak-db-postgresql
+  port: 5432
+  username: dbusername
+  password: dbpassword
+  database: keycloak
+
+secrets:
+  admin-creds:
+    annotations:
+      my-test-annotation: Test secret for {{ include "keycloak.fullname" . }}
+    stringData:
+      user: admin
+      password: secret
+
