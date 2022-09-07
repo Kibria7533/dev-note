@@ -9,7 +9,7 @@ and example ar default valu gulo use korbo
 
 cd kore postgresql a jabo and then age postgresql then server ar values diye install marbo
 
-
+directory hbe /opt/keycloak/themes/mytheme
 =========================================
 for custom themes 
 https://github.com/codecentric/helm-charts/tree/master/charts/keycloakx#providing-a-custom-theme
