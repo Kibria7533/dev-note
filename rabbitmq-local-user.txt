@@ -1,0 +1,3 @@
+rabbitmqctl add_user future-nation admin
+rabbitmqctl set_user_tags future-nation administrator
+rabbitmqctl set_permissions -p / future-nation ".*" ".*" ".*"
