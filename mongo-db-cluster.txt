@@ -1,0 +1,185 @@
+============install mongodb specif version(example for 4.4.16)===========================
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 656408E390CFB1F5
+echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb.list
+sudo apt update
+sudo apt install mongodb-org
+sudo systemctl restart mongod.service
+sudo systemctl status mongod.service
+
+if any error---(sudo rm -rf /tmp/mongodb-27017.sock)
+==========================================================================install mongodb updated(6 not worked for me)==========================================================================
+wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+sudo apt-get update
+
+sudo apt-get install -y mongodb-org
+****If any issue occure then run below two command 
+wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+*** And run again -----(sudo apt-get install -y mongodb-org)
+echo "mongodb-org hold" | sudo dpkg --set-selections
+echo "mongodb-org-database hold" | sudo dpkg --set-selections
+echo "mongodb-org-server hold" | sudo dpkg --set-selections
+echo "mongodb-mongosh hold" | sudo dpkg --set-selections
+echo "mongodb-org-mongos hold" | sudo dpkg --set-selections
+echo "mongodb-org-tools hold" | sudo dpkg --set-selections
+
+
+sudo systemctl start mongod
+
+
+sudo systemctl status mongod
+
+===================================================Create the replica /config server =================================================================================================
+
+***first make ready three mongodb instance with above command then generate key from below command -------
+**********Importtant sudo su first*********
+# sudo mkdir -p /etc/mongodb/keys/
+# sudo openssl rand -base64 756 > /etc/mongodb/keys/mongo-key
+# sudo chmod 400 /etc/mongodb/keys/mongo-key
+# sudo chown -R mongodb:mongodb /etc/mongodb
+
+
+
+***And copy the mongo-key on same file location on each and every location then give permission bu using bellow command 
+
+# sudo chmod 400 /etc/mongodb/keys/mongo-key
+# sudo chown -R mongodb:mongodb /etc/mongodb
+
+
+
+
+=============================================change the configuration file for config server===========================================================================================
+net:
+  port: 27017
+  bindIp: 0.0.0.0
+#security:
+security:
+ authorization: enabled
+ keyFile:  /etc/mongodb/keys/mongo-key
+ 
+sharding:
+   clusterRole: configsvr
+#replication:
+replication:
+  replSetName: "cfg"
+  
+  
+  
+  ******And restart the mongodb servers
+#sudo systemctl restart mongod.service
+
+===================================================Replicaset Initiate=================================================================================================================
+
+**** Now we can check telnet 172.172.172.172(ip):27017 if ok the start initiate it 
+
+use admin
+rs.initiate({
+_id: "cfg",
+configsvr:true,
+members:[
+       { _id : 0, host : "172.31.19.28:27019" },
+        { _id : 1, host : "172.31.31.46:27019" },
+         { _id : 2, host : "172.31.27.20:27019" },
+]
+})
+
+
+
+****** Config Server setup is completed*****************************************************************
+
+
+=========================================Now shard server setting ======================================================================================================================
+
+***copy the key from one of config server and give it permission in the same way
+
+
+*** And for sure for shard server also edit its configuration as well like bellow 
+*** vi /etc/mongod.conf
+
+net:
+  port: 27017
+  bindIp: 0.0.0.0
+#security:
+security:
+ authorization: enabled
+ keyFile:  /etc/mongodb/keys/mongo-key
+ 
+sharding:
+   clusterRole: shardsvr
+#replication:
+replication:
+  replSetName: shard1
+
+****And start service with (service mongod start)
+
+Now Initiate it on any shard instance
+
+
+use admin
+rs.initiate({_id: "shard3",members:[
+{ _id : 0, host : "172.31.19.28:27022" },
+        { _id : 1, host : "172.31.31.46:27022" },
+         { _id : 2, host : "172.31.27.20:27020" },
+]})
+
+==================================================================Now we will create maintance user of any shard===============================================================
+
+use admin
+db.createUser(
+   {
+     user: "shard_admin_user",
+     pwd: "secret",
+     roles: [ 
+     { role : "dbAdminAnyDatabase" , db :"admin" },
+      { role : "userAdminAnyDatabase" , db :"admin" },
+       { role : "readWriteAnyDatabase" , db :"admin" },
+        { role : "clusterAdmin" , db :"admin" }
+      ]
+   }
+)
+
+
+================================================================Now configure the mongos server/router========================================================================================
+*********** Dont forget to install mongodb properly 
+************* Now we will hide storage ,dbpath,jounal in mongod.conf
+*************Now change port 27018 and bindip 0.0.0.0
+******** And other things like below
+security:
+ authorization: enabled
+ keyFile:  /etc/mongodb/keys/mongo-key
+ 
+sharding:
+   configDB: cfg/172.31.12.44:27017,172.31.8.229:27017,172.31.6.49:27017
+   
+   
+*****then create a file called mongos.conf and copy mongod.conf 
+
+cp /etc/mongod.conf  /etc/mongos.conf   
+
+
+
+
+************And Now run the bellow command
+sudo mongos --config /etc/mongos.conf
+
+
+****Now login mongodb on 27018 port
+mongo --port 27018
+
+**********And  create a administrative user
+
+use admin
+db.createUser({user: "cluster_admin_user",pwd: "secret",roles: [ { role : "userAdminAnyDatabase" , db :"admin" }, { role : "readWriteAnyDatabase" , db :"admin" },{ role : "clusterAdmin" , db :"admin" }]})
+
+
+
+
+******* Now login as ----db.auth("cluster_admin_user","secret")
+******* Now Last step add Shar ----sh.addShard("shard2/172.31.31.46:27020");
+
+db.populations.cities.createIndex({"country":1}) 
+
