@@ -207,6 +207,29 @@ and paste
 
 ### In the master node generate the string for joining
 `kubeadm token create --print-join-command`
+
+# Now make sure you added this nodes in etc hosts file
+
+```172.17.177.85 master
+172.17.177.86 worker1
+172.17.177.87 worker2
+172.17.177.88 worker3
+172.17.177.89 worker4
+```
+
+and run on master node
+
+```
+sudo ufw allow 6443/tcp
+sudo ufw allow 2379-2380/tcp
+sudo ufw allow 10250/tcp
+sudo ufw allow 10251/tcp
+sudo ufw allow 10252/tcp
+sudo ufw allow 10255/tcp
+sudo ufw reload
+```
+
+
 ### Paste the join command in the worker node
 
 ### In the master node label the node as worker node
