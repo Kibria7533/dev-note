@@ -334,7 +334,7 @@ kubectl create -f https://raw.githubusercontent.com/minhaz1217/devops-notes/mast
 
 ### Go to firefox browser not chrome
 ## Now generate and save the token for further uses
-`kubectl -n kubernetes-dashboard create token admin-user`
+`kubectl -n kubernetes-dashboard create token admin-user` --duration 1000m
 
 
 ### If its updated version you need to create a secret again(if you are not getting token annny how)
