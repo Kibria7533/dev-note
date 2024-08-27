@@ -1,14 +1,17 @@
 #!/bin/bash
 
 # Configuration
-DEPLOYMENTS_FILE="/home/voganti01/deployments.txt"
-DIGEST_DIR="/home/voganti01/digests"
-LOG_FILE="/home/voganti01/check_image_updates.log"
+DEPLOYMENTS_FILE="/home/voganti01/deployments.txt"  # Path to the file containing image-deployment-namespace triples
+DIGEST_DIR="/home/voganti01/digests"  # Directory to store the last digest files
+LOG_FILE="/home/voganti01/check_image_updates.log"  # Path to the log file
 
 # Docker Registry URL and credentials
 REGISTRY_URL="https://registry-1.docker.io/v2"
-DOCKER_USERNAME="devpentabd"
-DOCKER_PASSWORD="c009454d-8639-4395-acbe-7fc6e2c698c8"
+DOCKER_USERNAME="your-docker-username"
+DOCKER_PASSWORD="your-docker-password"
+
+# Discord webhook URL
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1277882646671921163/DkoyABPo_2MdTeMGerv-bKGwmqLcdY6mMmbMM9yZkGQy-CknpkZ72WE3ujL8pACDE-Yp"
 
 # Ensure digest directory exists
 mkdir -p "$DIGEST_DIR"
@@ -16,6 +19,12 @@ mkdir -p "$DIGEST_DIR"
 # Function to log in to Docker registry
 docker_login() {
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+}
+
+# Function to send a message to Discord
+send_discord_message() {
+    local message="$1"
+    curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"$message\"}" "$DISCORD_WEBHOOK_URL"
 }
 
 # Log the start time
@@ -56,9 +65,14 @@ while IFS='|' read -r image_tag deployment_name namespace; do
         
         echo "$current_digest" > "$digest_file"
         kubectl rollout restart deployment/"$deployment_name" -n "$namespace" >> "$LOG_FILE" 2>&1
+
+        # Send a notification to Discord
+        discord_message="**Rollout Restart Triggered**\n\nImage: $image_tag\nDeployment: $deployment_name\nNamespace: $namespace\nTime: $(date)"
+        send_discord_message "$discord_message"
     else
         echo "No changes detected for image ${image_tag} at $(date)." >> "$LOG_FILE"
     fi
 done < "$DEPLOYMENTS_FILE"
 
+# Log the end time
 echo "Script completed at $(date)" >> "$LOG_FILE"
