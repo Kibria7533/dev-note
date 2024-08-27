@@ -1,0 +1,1 @@
+*/2 * * * * /home/voganti01/images_update_check.sh

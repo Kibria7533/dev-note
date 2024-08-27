@@ -1,0 +1,4 @@
+devpentabd/voganti-user-management-dev:latest|voganti-user-management-dev|dev
+devpentabd/voganthi-document-service-dev:latest|voganthi-document-service-dev|dev
+devpentabd/voganti-frontend-dev:latest|voganti-frontend-dev|dev
+devpentabd/voganti-core-dev:latest|voganti-core-dev|dev
