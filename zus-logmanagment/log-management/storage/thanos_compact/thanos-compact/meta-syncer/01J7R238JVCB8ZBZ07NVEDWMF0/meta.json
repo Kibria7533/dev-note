@@ -1,0 +1,43 @@
+{
+	"ulid": "01J7R238JVCB8ZBZ07NVEDWMF0",
+	"minTime": 1726310527823,
+	"maxTime": 1726310580000,
+	"stats": {
+		"numSamples": 5018,
+		"numSeries": 5018,
+		"numChunks": 5018
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7R238JVCB8ZBZ07NVEDWMF0"
+		]
+	},
+	"version": 1,
+	"thanos": {
+		"labels": {
+			"cluster": "my-prometheus",
+			"node": "node1"
+		},
+		"downsample": {
+			"resolution": 0
+		},
+		"source": "sidecar",
+		"segment_files": [
+			"000001"
+		],
+		"files": [
+			{
+				"rel_path": "chunks/000001",
+				"size_bytes": 115422
+			},
+			{
+				"rel_path": "index",
+				"size_bytes": 419260
+			},
+			{
+				"rel_path": "meta.json"
+			}
+		]
+	}
+}

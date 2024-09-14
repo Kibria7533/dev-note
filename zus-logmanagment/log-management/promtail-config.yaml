@@ -1,0 +1,198 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 9095
+
+positions:
+  filename: /var/log/promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: 'desktop_vult_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'desktop_vult_access_log'
+          __path__: /var/log/nginx/desktop-vult-dev.log
+
+  - job_name: 'desktop_vult_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'desktop_vult_error_log'
+          __path__: /var/log/nginx/desktop-vult-error.log
+
+  - job_name: 'dev_website_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_website_access_log'
+          __path__: /var/log/nginx/dev-website.log
+
+  - job_name: 'dev_website_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_website_error_log'
+          __path__: /var/log/nginx/dev-website-error.log
+
+  - job_name: 'dev_zus_webapp_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_zus_webapp_access_log'
+          __path__: /var/log/nginx/dev-zus-webapp.log
+
+  - job_name: 'dev_zus_webapp_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_zus_webapp_error_log'
+          __path__: /var/log/nginx/dev-zus-webapp-error.log
+
+  - job_name: 'dev_zus_website_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_zus_website_access_log'
+          __path__: /var/log/nginx/dev-zus-website.log
+
+  - job_name: 'dev_zus_website_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_zus_website_error_log'
+          __path__: /var/log/nginx/dev-zus-website-error.log
+
+  - job_name: 'dev_blimp_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_blimp_access_log'
+          __path__: /var/log/nginx/blimp-dev.log
+
+  - job_name: 'dev_blimp_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_blimp_error_log'
+          __path__: /var/log/nginx/blimp-error.log
+
+  - job_name: 'dev_bolt_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_bolt_access_log'
+          __path__: /var/log/nginx/bolt-dev.log
+
+  - job_name: 'dev_bolt_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_bolt_error_log'
+          __path__: /var/log/nginx/bolt-error.log
+
+  - job_name: 'dev_chalk_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_chalk_access_log'
+          __path__: /var/log/nginx/chalk-dev.log
+
+  - job_name: 'dev_chalk_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_chalk_error_log'
+          __path__: /var/log/nginx/chalk-error.log
+
+  - job_name: 'dev_chimney_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_chimney_access_log'
+          __path__: /var/log/nginx/chimney-dev.log
+
+  - job_name: 'dev_chimney_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_chimney_error_log'
+          __path__: /var/log/nginx/chimney-error.log
+
+  - job_name: 'dev_vult_access_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_vult_access_log'
+          __path__: /var/log/nginx/vult-dev.log
+
+  - job_name: 'dev_vult_error_log'
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: 'dev_vult_error_log'
+          __path__: /var/log/nginx/vult-error.log
+
+  - job_name: container_logs
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+    relabel_configs:
+      # Drop logs from containers with the label logging=excluded
+      - source_labels: ['__meta_docker_container_label_logging']
+        regex: "excluded"
+        action: drop
+      # Drop logs from containers with the names
+      - source_labels: ['__meta_docker_container_name']
+        regex: "logs_"
+        action: drop
+      
+      # Label containers that have logs
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'container'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'logstream'
+      - source_labels: ['__meta_docker_container_label_logging_jobname']
+        target_label: 'job'
+    pipeline_stages:
+      - cri: {}
+      - json:
+          expressions:
+            timestamp: timestamp
+            message: message
+            level: level
+            thread: thread
+            class: logger
+            context: context
+            exception: exception
+            data: "join('\n', [message, exception || '' ])"
+      - labels:
+          level:
+          thread:
+          class:
+          context:
+      - timestamp:
+          format: RFC3339
+          source: timestamp
+      - output:
+          source: data

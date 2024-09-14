@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7RKBZFF90CEWBPAWGPG50TC",
+	"minTime": 1726328641559,
+	"maxTime": 1726328700000,
+	"stats": {
+		"numSamples": 4727,
+		"numSeries": 4727,
+		"numChunks": 4727
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7RKBZFF90CEWBPAWGPG50TC"
+		]
+	},
+	"version": 1
+}

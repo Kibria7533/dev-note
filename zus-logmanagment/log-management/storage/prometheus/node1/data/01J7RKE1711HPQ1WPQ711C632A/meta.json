@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7RKE1711HPQ1WPQ711C632A",
+	"minTime": 1726328709700,
+	"maxTime": 1726328760000,
+	"stats": {
+		"numSamples": 4758,
+		"numSeries": 4758,
+		"numChunks": 4758
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7RKE1711HPQ1WPQ711C632A"
+		]
+	},
+	"version": 1
+}

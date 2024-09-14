@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="dev-note">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/mongodb-cluster-setting.zip!/" />
+      <root url="jar://$PROJECT_DIR$/ansible-vbox-vagrant-kubernetes.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
