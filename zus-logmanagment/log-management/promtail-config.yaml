@@ -157,6 +157,9 @@ scrape_configs:
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 15s
+    static_configs:
+      - labels:
+          environment: production
     relabel_configs:
       # Drop logs from containers with the label logging=excluded
       - source_labels: ['__meta_docker_container_label_logging']
@@ -174,25 +177,25 @@ scrape_configs:
         target_label: 'logstream'
       - source_labels: ['__meta_docker_container_label_logging_jobname']
         target_label: 'job'
-    pipeline_stages:
-      - cri: {}
-      - json:
-          expressions:
-            timestamp: timestamp
-            message: message
-            level: level
-            thread: thread
-            class: logger
-            context: context
-            exception: exception
-            data: "join('\n', [message, exception || '' ])"
-      - labels:
-          level:
-          thread:
-          class:
-          context:
-      - timestamp:
-          format: RFC3339
-          source: timestamp
-      - output:
-          source: data
+#    pipeline_stages:
+#      - cri: {}
+#      - json:
+#          expressions:
+#            timestamp: timestamp
+#            message: message
+#            level: level
+#            thread: thread
+#            class: logger
+#            context: context
+#            exception: exception
+#            data: "join('\n', [message, exception || '' ])"
+#      - labels:
+#          level:
+#          thread:
+#          class:
+#          context:
+#      - timestamp:
+#          format: RFC3339
+#          source: timestamp
+#      - output:
+#          source: data

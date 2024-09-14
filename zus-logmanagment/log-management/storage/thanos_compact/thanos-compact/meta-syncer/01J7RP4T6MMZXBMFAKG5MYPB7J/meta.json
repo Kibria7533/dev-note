@@ -1,0 +1,62 @@
+{
+	"ulid": "01J7RP4T6MMZXBMFAKG5MYPB7J",
+	"minTime": 1726308668664,
+	"maxTime": 1726315200000,
+	"stats": {
+		"numSamples": 101186,
+		"numSeries": 2686,
+		"numChunks": 6053
+	},
+	"compaction": {
+		"level": 2,
+		"sources": [
+			"01J7R34RSVAS5DZA7PC9Z23Z1H",
+			"01J7R3V12B1SCQW2FTCNMVX72B",
+			"01J7RJVQY44Q5YQS1MA64NMNCH"
+		],
+		"parents": [
+			{
+				"ulid": "01J7R34RSVAS5DZA7PC9Z23Z1H",
+				"minTime": 1726308668664,
+				"maxTime": 1726311707430
+			},
+			{
+				"ulid": "01J7R3V12B1SCQW2FTCNMVX72B",
+				"minTime": 1726311707430,
+				"maxTime": 1726312430400
+			},
+			{
+				"ulid": "01J7RJVQY44Q5YQS1MA64NMNCH",
+				"minTime": 1726312430400,
+				"maxTime": 1726315200000
+			}
+		]
+	},
+	"version": 1,
+	"thanos": {
+		"labels": {
+			"receive": "true",
+			"tenant_id": "default-tenant"
+		},
+		"downsample": {
+			"resolution": 0
+		},
+		"source": "compactor",
+		"segment_files": [
+			"000001"
+		],
+		"files": [
+			{
+				"rel_path": "chunks/000001",
+				"size_bytes": 328305
+			},
+			{
+				"rel_path": "index",
+				"size_bytes": 288959
+			},
+			{
+				"rel_path": "meta.json"
+			}
+		]
+	}
+}

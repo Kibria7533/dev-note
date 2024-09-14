@@ -1,0 +1,36 @@
+groups:
+  - name: DemoAlerts
+    rules:
+      - alert: InstanceDown 
+        expr: up{job="services"} == 1
+        for: 10s
+        labels:
+          severity: low
+        annotations:
+          summary: 'Alert with low severity.'
+
+      - alert: InstanceDownCritical
+        expr: up{job="services"} == 0
+        for: 30s
+        labels:
+          severity: high
+        annotations:
+          summary: 'Alert with high severity.'
+
+  - name: DemoAlertswww
+    rules:
+      - alert: AlwaysFiring
+        expr: vector(1)
+        for: 1m
+        labels:
+          severity: low
+        annotations:
+          summary: 'This is a test alert that will always fire.'
+
+      - alert: AlwaysCritical
+        expr: vector(1)
+        for: 1m
+        labels:
+          severity: high
+        annotations:
+          summary: 'This is a critical test alert that will always fire.'

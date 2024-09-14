@@ -1,0 +1,17 @@
+{
+	"ulid": "01J7RPGZR97KSKVEY867X1KNYF",
+	"minTime": 1726331948054,
+	"maxTime": 1726332000000,
+	"stats": {
+		"numSamples": 4771,
+		"numSeries": 4771,
+		"numChunks": 4771
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01J7RPGZR97KSKVEY867X1KNYF"
+		]
+	},
+	"version": 1
+}

@@ -1,0 +1,64 @@
+{
+	"ulid": "01J7RPDZ6TSMHAHQYY90JBDX46",
+	"minTime": 1726305754060,
+	"maxTime": 1726328990400,
+	"stats": {
+		"numSamples": 140886,
+		"numSeries": 3449,
+		"numChunks": 11047
+	},
+	"compaction": {
+		"level": 3,
+		"sources": [
+			"01J7R08A6GE2E1D8CK8KD71RN3",
+			"01J7R34RSVAS5DZA7PC9Z23Z1H",
+			"01J7R3V12B1SCQW2FTCNMVX72B",
+			"01J7RJVQY44Q5YQS1MA64NMNCH",
+			"01J7RKMY6S5C2JN76C45TS0KTK"
+		],
+		"parents": [
+			{
+				"ulid": "01J7R08A6GE2E1D8CK8KD71RN3",
+				"minTime": 1726305754060,
+				"maxTime": 1726308668664
+			},
+			{
+				"ulid": "01J7RP4T6MMZXBMFAKG5MYPB7J",
+				"minTime": 1726308668664,
+				"maxTime": 1726315200000
+			},
+			{
+				"ulid": "01J7RKMY6S5C2JN76C45TS0KTK",
+				"minTime": 1726324599468,
+				"maxTime": 1726328990400
+			}
+		]
+	},
+	"version": 1,
+	"thanos": {
+		"labels": {
+			"receive": "true",
+			"tenant_id": "default-tenant"
+		},
+		"downsample": {
+			"resolution": 0
+		},
+		"source": "compactor",
+		"segment_files": [
+			"000001"
+		],
+		"files": [
+			{
+				"rel_path": "chunks/000001",
+				"size_bytes": 500821
+			},
+			{
+				"rel_path": "index",
+				"size_bytes": 371675
+			},
+			{
+				"rel_path": "meta.json"
+			}
+		]
+	}
+}

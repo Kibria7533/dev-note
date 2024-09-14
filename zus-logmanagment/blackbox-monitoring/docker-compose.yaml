@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  blackbox_exporter:
+    image: quay.io/prometheus/blackbox-exporter:latest       
+    container_name: blackbox_exporter
+    ports:
+      - "9115:9115"
+    volumes:
+      - .:/config
+    command:
+      - --config.file=/config/blackbox.yml
+  alertmanager:
+    image: quay.io/prometheus/alertmanager
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+  promteams:
+    image: quay.io/prometheusmsteams/prometheus-msteams      
+    container_name: promteams
+    ports:
+      - "2000:2000"
+    environment:
+      - TEAMS_INCOMING_WEBHOOK_URL=<teams_token> #replce with your teams token
+      - TEAMS_REQUEST_URI=alertmanager
+  prometheus_monitoring:
+    image: prom/prometheus
+    container_name: prometheus_monitoring
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+      - ./rules/rules.yml:/etc/prometheus/rules/rules.yml
+    depends_on:
+      - blackbox_exporter
+      - alertmanager
+      - promteams
+volumes:
+  prometheus-data:
