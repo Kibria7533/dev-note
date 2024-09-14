@@ -1,0 +1,68 @@
+groups:
+  - name: DemoAlerts
+    rules:
+      - alert: InstanceDown 
+        expr: up{job="services"} == 1
+        for: 10s
+        labels:
+          severity: low
+        annotations:
+          summary: 'Alert with low severity.'
+
+      - alert: InstanceDownCritical
+        expr: up{job="services"} == 0
+        for: 30s
+        labels:
+          severity: high
+        annotations:
+          summary: 'Alert with high severity.'
+
+  - name: DemoAlertswww
+    rules:
+      - alert: AlwaysFiring
+        expr: vector(1)
+        for: 1m
+        labels:
+          severity: low
+        annotations:
+          summary: 'This is a test alert that will always fire.'
+
+      - alert: AlwaysCritical
+        expr: vector(1)
+        for: 1m
+        labels:
+          severity: high
+        annotations:
+          summary: 'This is a critical test alert that will always fire.'
+  - name: Monitor mysite.com
+    rules:
+      - alert: mysite.com is Down
+        expr: |
+          up{instance="https://mysite.com", job="mysite.com"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "mysite.com site is down"
+          description: "mysite.com is not reacheable for the last 1 minutes."
+
+      - alert: mysite.com SSL Expired
+        expr: |
+          probe_http_ssl{instance="https://mysite.com", job="mysite.com"} == 0
+
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "mysite.com site SSL Expired"
+          description: "mysite.com site SSL exppired."
+
+      - alert: mysite.com SSL <30 days to Expire
+        expr: |
+          ( ceil((probe_ssl_earliest_cert_expiry{instance="https://mysite.com", job="mysite.com"}-time())/86400) <= 30 )
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "mysite.com site SSL Expiry soon"
+          description: "mysite.com site SSL expires in  {{ $value }}  days from now."
