@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="env-from-configmap">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/env-issue-in-k8s/env-from-configmap.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
