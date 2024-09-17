@@ -1,0 +1,1 @@
+It has , prometheus cluster with thanos+minio, and loki+minio , and we have blackbox, uptimekuma
