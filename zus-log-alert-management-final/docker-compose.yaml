@@ -1,0 +1,462 @@
+version: '3.8'
+services:
+  loki:
+    image: grafana/loki:latest
+    container_name: logs_loki
+    ports:
+      - "3110:3100"
+    volumes:
+      - ./loki.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - zus-log-alert-net
+    labels:
+      logging: "excluded"
+
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: logs_prom
+    user: root
+    volumes:
+      - /var/log/nginx:/var/log/nginx
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail-config.yaml:/etc/promtail/config.yml
+      - /etc/hostname:/etc/hostname:ro
+    entrypoint: [ "/bin/sh","-c" ]
+    command:
+      - |
+        export HOSTNAME=$$(cat /etc/hostname)
+        /usr/bin/promtail -config.file=/etc/promtail/config.yml -client.external-labels=hostname=$$HOSTNAME
+    networks:
+      - zus-log-alert-net
+    labels:
+      logging: "excluded"
+  grafana:
+    user: root
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_BASIC_ENABLED=true
+      - GF_AUTH_BASIC_ALLOW_SIGN_UP=false
+      - GF_EXTERNAL_IMAGE_STORAGE_PROVIDER=s3
+      - GF_EXTERNAL_IMAGE_STORAGE_S3_BUCKET=loki-grafana
+      - GF_EXTERNAL_IMAGE_STORAGE_S3_REGION=us-east-1
+      - GF_EXTERNAL_IMAGE_STORAGE_S3_ENDPOINT=http://minio:9000
+      - GF_EXTERNAL_IMAGE_STORAGE_S3_ACCESS_KEY_ID=minioadmin
+      - GF_EXTERNAL_IMAGE_STORAGE_S3_SECRET_ACCESS_KEY=minioadmin
+      - GF_EXTERNAL_IMAGE_STORAGE_S3_PATH_STYLE_ACCESS=true
+    image: grafana/grafana:latest
+    container_name: logs_grafana
+    ports:
+      - "3220:3000"
+    volumes:
+      - ./storage/grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    networks:
+      - zus-log-alert-net
+    labels:
+      logging: "excluded"
+
+
+  minio:
+    image: minio/minio:latest
+    container_name: logs_minio
+    labels:
+      logging: "excluded"
+    ports:
+      - "${MINIO_DATAPORT}:9000"
+      - "${MINIO_ACCESSPORT}:9001"
+    user: root
+    environment:
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=bucketsecret
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+    networks:
+      - zus-log-alert-net
+    volumes:
+      - ./storage/miniodata/data:/data
+    command: server --address ':9000' --console-address ':9001' /data
+
+  createbuckets:
+    image: minio/mc
+    container_name: logs_mc
+    labels:
+      logging: "excluded"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 admin bucketsecret;
+      /usr/bin/mc rm -r --force myminio/loki;
+      /usr/bin/mc mb myminio/loki;
+      /usr/bin/mc policy set public myminio/loki;
+      /usr/bin/mc rm -r --force myminio/loki-grafana;
+      /usr/bin/mc mb myminio/loki-grafana;
+      /usr/bin/mc policy set public myminio/loki-grafana;
+      /usr/bin/mc alias set myminio http://minio:9000 admin bucketsecret;
+      /usr/bin/mc mb myminio/prometheusthanos;
+      /usr/bin/mc policy set public myminio/prometheusthanos;
+      exit 0;
+      "
+
+
+  prometheus-node1:
+    image: prom/prometheus
+    container_name: prometheus-node1
+    user: root
+    labels:
+      logging: "excluded"
+    volumes:
+      - ./prometheus/node1:/etc/prometheus
+      - ./storage/prometheus/node1/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.min-block-duration=1m'
+      - '--storage.tsdb.max-block-duration=1m'
+      - '--storage.tsdb.retention.time=5m'
+    ports:
+      - "${PROMETHEUS_NODE1_EXPOSE}:9090"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+    restart: unless-stopped
+
+  thanos-sidecar1:
+    image: thanosio/thanos:v0.31.0
+    container_name: thanos-sidecar1
+    labels:
+      logging: "excluded"
+    user: root
+    volumes:
+      - ./storage/prometheus/node1/data:/var/prometheus
+      - ./thanos/bucket_config.yaml:/bucket_config.yaml
+    command:
+      - sidecar
+      - --tsdb.path=/var/prometheus
+      - --prometheus.url=http://prometheus-node1:9090
+      - --objstore.config-file=/bucket_config.yaml
+      - --http-address=0.0.0.0:${THANOS_SIDECAR1_HTTP}
+      - --grpc-address=0.0.0.0:${THANOS_SIDECAR1_GRPC}
+    ports:
+      - "${THANOS_SIDECAR1_HTTP_EXPOSE}:${THANOS_SIDECAR1_HTTP}"
+      - "${THANOS_SIDECAR1_GRPC_EXPOSE}:${THANOS_SIDECAR1_GRPC}"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - prometheus-node1
+    restart: unless-stopped
+
+
+
+
+  prometheus-node2:
+    image: prom/prometheus
+    container_name: prometheus-node2
+    labels:
+      logging: "excluded"
+    user: root
+    volumes:
+      - ./prometheus/node2:/etc/prometheus
+      - ./storage/prometheus/node2/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.min-block-duration=1m'
+      - '--storage.tsdb.max-block-duration=1m'
+      - '--storage.tsdb.retention.time=5m'
+    ports:
+      - "${PROMETHEUS_NODE2_EXPOSE}:9090"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+    restart: unless-stopped
+
+  thanos-sidecar2:
+    image: thanosio/thanos:v0.31.0
+    container_name: thanos-sidecar2
+    labels:
+      logging: "excluded"
+    user: root
+    volumes:
+      - ./storage/prometheus/node2/data:/var/prometheus
+      - ./thanos/bucket_config.yaml:/bucket_config.yaml
+    command:
+      - sidecar
+      - --tsdb.path=/var/prometheus
+      - --prometheus.url=http://prometheus-node2:9090
+      - --objstore.config-file=/bucket_config.yaml
+      - --http-address=0.0.0.0:${THANOS_SIDECAR2_HTTP}
+      - --grpc-address=0.0.0.0:${THANOS_SIDECAR2_GRPC}
+    ports:
+      - "${THANOS_SIDECAR2_HTTP_EXPOSE}:${THANOS_SIDECAR2_HTTP}"
+      - "${THANOS_SIDECAR2_GRPC_EXPOSE}:${THANOS_SIDECAR2_GRPC}"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - prometheus-node2
+    restart: unless-stopped
+
+
+
+
+  thanos-store:
+    image: thanosio/thanos:v0.31.0
+    user: root
+    labels:
+      logging: "excluded"
+    container_name: thanos-store
+    volumes:
+      - ./thanos/bucket_config.yaml:/bucket_config.yaml
+    command:
+      - store
+      - --data-dir=/var/thanos/store
+      - --objstore.config-file=bucket_config.yaml
+      - --http-address=0.0.0.0:${THANOS_STORE_HTTP}
+      - --grpc-address=0.0.0.0:${THANOS_STORE_GRPC}
+    ports:
+      - "${THANOS_STORE_HTTP_EXPOSE}:${THANOS_STORE_HTTP}"
+      - "${THANOS_STORE_GRPC_EXPOSE}:${THANOS_STORE_GRPC}"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+    restart: unless-stopped
+
+
+
+
+
+  thanos-querier:
+    image: thanosio/thanos:v0.31.0
+    user: root
+    container_name: thanos-querier
+    labels:
+      logging: "excluded"
+    command:
+      - query
+      - --http-address=0.0.0.0:${THANOS_QUERY_HTTP}
+      - --store=thanos-sidecar1:${THANOS_SIDECAR1_GRPC}
+      - --store=thanos-sidecar2:${THANOS_SIDECAR2_GRPC}
+      - --store=thanos-store:${THANOS_STORE_GRPC}
+      - --store=thanos-receive:${THANOS_RECEIVE_GRPC}
+#      - --store=thanos-rule:10901
+      - --query.replica-label=node
+    ports:
+      - "${THANOS_QUERY_HTTP_EXPOSE}:${THANOS_QUERY_HTTP}"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+      - thanos-receive
+      - thanos-store
+    restart: unless-stopped
+
+  thanos-querier_frontend:
+    image: thanosio/thanos:v0.31.0
+    user: root
+    labels:
+      logging: "excluded"
+    container_name: thanos-querier_frontend
+    command:
+      - query-frontend
+      - --http-address=0.0.0.0:${THANOS_QUERY_FRONTEND_HTTP}
+      - --query-frontend.downstream-url=http://thanos-querier:${THANOS_QUERY_HTTP}
+      - --query-frontend.compress-responses
+      - --query-range.partial-response
+      - --query-range.split-interval=24h
+      - --query-range.max-retries-per-request=5
+      - --query-frontend.log-queries-longer-than=5s
+      - --cache-compression-type=snappy
+    ports:
+      - "${THANOS_QUERY_FRONTEND_HTTP_EXPOSE}:${THANOS_QUERY_FRONTEND_HTTP}"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+      - thanos-querier
+    restart: unless-stopped
+
+
+  thanos-receive:
+    image: thanosio/thanos:v0.31.0
+    user: root
+    labels:
+      logging: "excluded"
+    container_name: thanos-receive
+    command:
+      - receive
+      - --tsdb.path=/data/remote-write-receive-data
+      - --http-address=0.0.0.0:${THANOS_RECEIVE_HTTP}
+      - --grpc-address=0.0.0.0:${THANOS_RECEIVE_GRPC}
+      - --receive.replication-factor=1
+      - --remote-write.address=0.0.0.0:${THANOS_RECEIVE_REMOTE}
+      - --objstore.config-file=/bucket_config.yaml
+      - --grpc-grace-period=1s
+      - --http-grace-period=1s
+      - --label=receive="true"
+    volumes:
+      - ./storage/thanos_receive:/data
+      - ./thanos/bucket_config.yaml:/bucket_config.yaml
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+    ports:
+      - "${THANOS_RECEIVE_REMOTE_EXPOSE}:${THANOS_RECEIVE_REMOTE}"
+      - "${THANOS_RECEIVE_GRPC_EXPOSE}:${THANOS_RECEIVE_GRPC}"
+      - "${THANOS_RECEIVE_HTTP_EXPOSE}:${THANOS_RECEIVE_HTTP}"
+    restart: unless-stopped
+
+
+  thanos-compactor:
+    image: thanosio/thanos:v0.31.0
+    user: root
+    labels:
+      logging: "excluded"
+    container_name: thanos-compactor
+    command:
+      - compact
+      - --data-dir=/data/thanos-compact
+      - --objstore.config-file=/bucket_config.yaml
+      - --consistency-delay=15m
+      - --retention.resolution-raw=90d
+      - --retention.resolution-5m=120d
+      - --retention.resolution-1h=1y
+      - --compact.concurrency=6
+      - --downsample.concurrency=6
+      - --delete-delay=15m
+      - --wait
+      - --wait-interval=5m
+    volumes:
+      - ./storage/thanos_compact:/data
+      - ./thanos/bucket_config.yaml:/bucket_config.yaml
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+      - thanos-store
+    ports:
+      - "10902:10902"
+    restart: unless-stopped
+
+
+  alertmanager:
+    image: prom/alertmanager:v0.21.0
+    container_name: alertmanager
+    user: root
+    labels:
+      logging: "excluded"
+    volumes:
+      - ./prometheus/alert:/etc/config/
+      - ./storage/alertmanager:/data
+    command:
+      - '--config.file=/etc/config/alertmanager.yml'
+    restart: unless-stopped
+    expose:
+      - 9093
+    ports:
+      - "${ALERTMANAGER_EXPOSE}:9093"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+      - thanos-querier
+      - thanos-receive
+  node-exporter:
+    container_name: logs_node-exporter
+    user: root
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    expose:
+      - "9100"
+    networks:
+      - zus-log-alert-net
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /:/host:ro,rslave
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    labels:
+      logging: "excluded"
+     
+
+  cadvisor:
+    container_name: logs_cadvisor
+    user: root
+    image: gcr.io/cadvisor/cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    labels:
+       logging: "excluded"
+    networks:
+      - zus-log-alert-net
+
+
+  remote-write:
+    image: prom/prometheus
+    user: root
+    container_name: remote-write
+    labels:
+      logging: "excluded"
+    volumes:
+      - ./prometheus/remote-write/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./storage/prometheus/remote-write/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.min-block-duration=1m'
+      - '--storage.tsdb.max-block-duration=1m'
+      - '--storage.tsdb.retention.time=5m'
+    ports:
+      - "9099:9090"
+    networks:
+      - zus-log-alert-net
+    depends_on:
+      - minio
+      - thanos-receive
+    restart: unless-stopped
+
+  blackbox_exporter:
+    image: quay.io/prometheus/blackbox-exporter:latest
+    container_name: blackbox_exporter
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./blackbox:/config
+    networks:
+      - zus-log-alert-net
+    command:
+      - --config.file=/config/blackbox.yml
+
+
+networks:
+  zus-log-alert-net:
+         driver: bridge
+
+volumes:
+  thanos_receive: {}
+  thanos_compact: {}
+  grafana-storage: {}
+  thanos_rule: {}
+  alertmanager: {}
