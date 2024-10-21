@@ -49,7 +49,8 @@ kubectl get secret -n stackgres stackgres-restapi-admin --template '{{ printf "p
 
 # To Create a Cluster with Db Backup
 
-```apiVersion: stackgres.io/v1
+```
+apiVersion: stackgres.io/v1
 kind: SGCluster
 metadata:
   name: demo
