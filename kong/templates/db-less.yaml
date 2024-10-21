@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-config
+  namespace: kong
+data:
+  kong.yml: |
+    _format_version: "3.0"
+    _transform: true
+
+    services:
+    - name: voganti-user-management-dev
+      url: http://voganti-user-management-dev.voganti
+      routes:
+      - name: voganti-user-management-dev-route
+        paths:
+        - /voganti-user-management-dev
+
+    - name: du-voganti-user-management-dev
+      url: http://du-voganti-user-management-dev.voganti
+      routes:
+      - name: du-voganti-user-management-dev-route
+        paths:
+        - /du-voganti-user-management-dev
+
+    - name: voganti-core-dev
+      url: http://voganti-core-dev.voganti
+      routes:
+      - name: voganti-core-dev-route
+        paths:
+        - /voganti-core-dev
+
+    - name: du-voganti-core-dev
+      url: http://du-voganti-core-dev.voganti
+      routes:
+      - name: du-voganti-core-dev-route
+        paths:
+        - /du-voganti-core-dev
+
+    - name: voganti-document-service-dev
+      url: http://voganthi-document-service-dev.voganti
+      routes:
+        - name: voganti-document-service-dev-route
+          paths:
+            - /voganti-document-service-dev
+
+    - name: voganti-public-dashboard-service-dev
+      url: http://voganti-public-dashboard-service-dev.voganti
+      routes:
+        - name: voganti-public-dashboard-service-dev-route
+          paths:
+            - /voganti-public-dashboard-service-dev
+
+
+
+    - name: event-document-service-prod
+      url: http://event-document-service-prod.event-service
+      routes:
+        - name: event-document-service-prod-route
+          paths:
+            - /event-document-service-prod
+
+    - name: event-management-service-prod
+      url: http://event-management-service-prod.event-service
+      routes:
+        - name: event-management-service-prod-route
+          paths:
+            - /event-management-service-prod
+
+    - name: event-meeting-service-dev
+      url: http://event-meeting-service-dev.event-dev
+      routes:
+        - name: event-meeting-service-dev-route
+          paths:
+            - /event-meeting-service-dev
+
+    - name: event-document-service-dev
+      url: http://event-document-service-dev.event-dev
+      routes:
+        - name: event-document-service-dev-route
+          paths:
+            - /event-document-service-dev
+
+    - name: event-management-app-dev
+      url: http://event-management-app-dev.event-dev
+      routes:
+        - name: event-management-app-dev-route
+          paths:
+            - /event-management-app-dev
+
+    - name: event-management-service-dev
+      url: http://event-management-service-dev.event-dev
+      routes:
+        - name: event-management-service-dev-route
+          paths:
+            - /event-management-service-dev
+
+
+    - name: event-management-web-dev
+      url: http://event-management-web-dev.event-dev
+      routes:
+        - name: event-management-web-dev-route
+          paths:
+            - /event-management-web-dev
+
+    - name: event-organizer-service-dev
+      url: http://event-organizer-service-dev.event-dev
+      routes:
+        - name: event-organizer-service-dev-route
+          paths:
+            - /event-organizer-service-dev
+
+    - name: lunch-confirmer-scheduler-dev
+      url: http://lunch-confirmer-scheduler-dev.event-dev
+      routes:
+        - name: lunch-confirmer-scheduler-dev-route
+          paths:
+            - /lunch-confirmer-scheduler-dev
+
+
+
+
+    - name: isp-user-management-dev
+      url: http://isp-user-management-dev.isp
+      routes:
+        - name: isp-user-management-dev-route
+          paths:
+            - /isp-user-management-dev
+
+
+
+    - name: penta-role-management-dev
+      url: http://penta-role-management-dev.isp
+      routes:
+        - name: penta-role-management-dev-route
+          paths:
+            - /penta-role-management-dev
+
