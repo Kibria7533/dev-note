@@ -16,6 +16,13 @@ KUBERNETES_VERSION="v1.30"
 CRIO_VERSION="v1.30"
 KUBERNETES_INSTALL_VERSION="1.30.0-1.1"
 
+# Check if kubeadm is installed and reset if it exists
+if command -v kubeadm &> /dev/null; then
+    echo "kubeadm is installed. Resetting previous kubeadm configuration..."
+    sudo kubeadm reset -f
+    sudo rm -rf /etc/kubernetes /var/lib/kubelet /var/lib/etcd /var/lib/cni
+fi
+
 # Disable swap
 sudo swapoff -a
 
@@ -82,7 +89,7 @@ sudo apt-get update -y
 # Install jq, a command-line JSON processor
 sudo apt-get install -y jq
 
-# Retrieve the local IP address of the eth0 interface and set it for kubelet
+# Retrieve the local IP address of the ens192 interface and set it for kubelet
 local_ip="$(ip --json addr show ens192 | jq -r '.[0].addr_info[] | select(.family == "inet") | .local')"
 
 # Write the local IP address to the kubelet default configuration file
