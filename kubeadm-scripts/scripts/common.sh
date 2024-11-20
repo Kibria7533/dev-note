@@ -4,6 +4,13 @@
 
 set -euxo pipefail
 
+# Prompt user to set hostname
+echo "Please enter the hostname for this node (e.g., k8s-master, k8s-worker-1):"
+read -r NEW_HOSTNAME
+
+# Set the new hostname
+sudo hostnamectl set-hostname "$NEW_HOSTNAME"
+
 # Kubernetes Variable Declaration
 KUBERNETES_VERSION="v1.30"
 CRIO_VERSION="v1.30"
