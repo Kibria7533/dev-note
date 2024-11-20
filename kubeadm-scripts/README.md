@@ -14,3 +14,6 @@ Take care of the following when setting up Kubernetes nodes:
 
 6. **Firewall**: Open necessary ports for Kubernetes communication.
 
+Refrence:
+
+https://devopscube.com/setup-kubernetes-cluster-kubeadm/
