@@ -1,0 +1,5 @@
+kong:
+  proxy:
+    type: NodePort
+  http:
+      enabled: true
