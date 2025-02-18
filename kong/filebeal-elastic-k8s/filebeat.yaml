@@ -39,15 +39,16 @@ data:
           ignore_missing: true
 
     setup.dashboards.enabled: false
+    
+
+    setup.template.enabled: false
+    setup.ilm.enabled: false  # Disable ILM to prevent index override
 
     output.elasticsearch:
       hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
       username: ${ELASTICSEARCH_USERNAME}
       password: ${ELASTICSEARCH_PASSWORD}
       index: "logs-%{[kubernetes.namespace]}-%{[kubernetes.pod.name]}-%{[kubernetes.container.name]}-%{+yyyy.MM.dd}"
-
-    setup.template.name: "logs"
-    setup.template.pattern: "logs-*"
 
 ---
 apiVersion: apps/v1
@@ -72,14 +73,14 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: filebeat
-        image: 172.16.2.71:5000/filebeat:7.17.16
+        image: docker.elastic.co/beats/filebeat:7.17.27
         args: [
           "-c", "/etc/filebeat.yml",
           "-e",
         ]
         env:
         - name: ELASTICSEARCH_HOST
-          value: "172.16.2.129"
+          value: "192.168.88.36"
         - name: ELASTICSEARCH_PORT
           value: "9200"
         - name: ELASTICSEARCH_USERNAME
