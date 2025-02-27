@@ -1,0 +1,69 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: keycloak-ingress-keycloak
+  namespace: keycloak
+  uid: 4ced0e78-18b4-454e-b8d5-1f9f198e75a9
+  resourceVersion: '17947902'
+  generation: 9
+  creationTimestamp: '2025-02-25T16:24:04Z'
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/secure-backends: 'true'
+    nginx.ingress.kubernetes.io/ssl-passthrough: 'true'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+  managedFields:
+    - manager: nginx-ingress-controller
+      operation: Update
+      apiVersion: networking.k8s.io/v1
+      time: '2025-02-25T16:24:51Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:status:
+          f:loadBalancer:
+            f:ingress: {}
+      subresource: status
+    - manager: dashboard
+      operation: Update
+      apiVersion: networking.k8s.io/v1
+      time: '2025-02-27T05:39:39Z'
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:annotations:
+            .: {}
+            f:cert-manager.io/cluster-issuer: {}
+            f:nginx.ingress.kubernetes.io/backend-protocol: {}
+            f:nginx.ingress.kubernetes.io/force-ssl-redirect: {}
+            f:nginx.ingress.kubernetes.io/rewrite-target: {}
+            f:nginx.ingress.kubernetes.io/secure-backends: {}
+            f:nginx.ingress.kubernetes.io/ssl-passthrough: {}
+            f:nginx.ingress.kubernetes.io/ssl-redirect: {}
+        f:spec:
+          f:ingressClassName: {}
+          f:rules: {}
+          f:tls: {}
+spec:
+  ingressClassName: public
+  tls:
+    - hosts:
+        - aaaa.gyoom.co
+      secretName: keycloak-ns-acme-crt-secret
+  rules:
+    - host: aaaa.gyoom.co
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak-keycloakx-http
+                port:
+                  number: 443
+status:
+  loadBalancer:
+    ingress:
+      - ip: 127.0.0.1
