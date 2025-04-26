@@ -10,11 +10,11 @@ class KeycloakUser(HttpUser):
     def login(self):
         # POST request to the token endpoint.
         response = self.client.post(
-            "/auth/realms/master/protocol/openid-connect/token",
+            "/realms/master/protocol/openid-connect/token",
             data={
                 "client_id": "admin-cli",
                 "username": "admin",
-                "password": "admin",
+                "password": "qazwsx@321",
                 "grant_type": "password"
             }
         )
