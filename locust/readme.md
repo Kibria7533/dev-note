@@ -98,8 +98,9 @@ Running Locust on Multiple Laptops (Distributed Workers)
 
 4.1 Start the Master on One Laptop
 
-```docker run -p 8089:8089 --name locust-master locustio/locust -f /mnt/locust/locustfile.py --master```
+```docker run -p 8089:8089 -p 5557:5557 --name locust-master -v $PWD:/mnt/locust locustio/locust -f /mnt/locust/locustfile.py --master
+```
 
 4.2 Start Workers on Other Laptops
-```docker run --name locust-worker locustio/locust -f /mnt/locust/locustfile.py --worker --master-host=<MASTER_IP>```
+```docker run --name locust-worker -v $PWD:/mnt/locust locustio/locust -f /mnt/locust/locustfile.py --worker --master-host=172.31.28.147```
 
