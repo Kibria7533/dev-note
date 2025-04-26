@@ -1,1 +1,1 @@
-git@github.com:pentaglobalsltd/acc-config-server.git
+git@github.com:pentaglobalsltd/voganti-core.git
