@@ -1,0 +1,48 @@
+name: Nagorik Frontend Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy to Server
+        env:
+          PASSWORD: ${{ secrets.PASSWORD }}
+          PORT: ${{ secrets.PORT }}
+          USERNAME: ${{ secrets.USERNAME }}
+          IP: ${{ secrets.IP }}
+        run: |
+          sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -p "$PORT" "$USERNAME@$IP" << 'EOF'
+            set +e
+
+            cd /root/july-blog || exit 1
+
+            echo "🔁 Loading NVM"
+            export NVM_DIR="\$HOME/.nvm"
+            [ -s "\$NVM_DIR/nvm.sh" ] && \. "\$NVM_DIR/nvm.sh"
+
+            echo "🗑️ Deleting old instance (if any)..."
+            pm2 delete july-blog || true
+
+            echo "📦 Git Pull"
+            git pull || true
+
+            echo "yarn instal"
+            yarn install || true
+
+            echo "yarn build"
+            yarn build || true
+          
+            echo "🚀 Starting fresh instance"
+            pm2 start yarn --name july-blog -- serve
+
+            echo "✅ Deployed."
+          EOFs
