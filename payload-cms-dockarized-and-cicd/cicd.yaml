@@ -1,0 +1,37 @@
+name: Ncp Moonsoon Protest Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Deploy via SSH
+        env:
+          PASSWORD: ${{ secrets.PASSWORD }}
+          PORT: ${{ secrets.PORT }}
+          USERNAME: ${{ secrets.USERNAME }}
+          IP: ${{ secrets.IP }}
+        run: |
+          sshpass -p "$PASSWORD" ssh -o StrictHostKeyChecking=no -p "$PORT" "$USERNAME@$IP" bash << 'EOF'
+            set -e
+
+            cd /root/monsoon-protest-archive
+
+            echo "Pulling latest code..."
+            git stash
+            git reset --hard HEAD
+            git clean -fd
+            git pull
+
+            echo "Rebuilding and restarting Docker container..."
+            docker compose down
+            docker compose up -d --build
+          EOF

@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo:latest
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - /root/data:/data/db
+    command: ["mongod", "--storageEngine", "wiredTiger", "--bind_ip", "0.0.0.0"]
+
+  payload:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: moonsoon:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
